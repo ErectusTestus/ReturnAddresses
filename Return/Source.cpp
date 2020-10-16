@@ -20,12 +20,6 @@ bool ValidFunction(DWORD64 Address)
 	else return true;
 }
 
-bool Valid(DWORD64 Ptr)
-{
-	if (Ptr < 0x10000lu || Ptr > 0xF000000000000llu || (Ptr & 1)) return false;
-	else return true;
-}
-
 bool ValidPage(DWORD64 Address)
 {
 	MEMORY_BASIC_INFORMATION mbi;
@@ -78,6 +72,12 @@ DWORD64 vtableHook(DWORD64 vtable, int Index, DWORD64 Function, DWORD64* Functio
 
 bool PrintAddresses(DWORD64 RSP, const char *HookName)
 {
+	HMODULE Module = GetModuleHandle(NULL);
+	if (Module == NULL) return false;
+
+	DWORD ThreadId = GetCurrentThreadId();
+	DWORD64 Exe = DWORD64(Module);
+	
 	DWORD64 SafePage = 0;
 	for (DWORD64 i = RSP; i <= RSP + 0x1000; i += 0x8)
 	{
@@ -110,7 +110,7 @@ bool PrintAddresses(DWORD64 RSP, const char *HookName)
 	{
 		if (ValidFunction(Array[i]))
 		{
-			printf("[%s] %016llX (%d/%d)\n", HookName, Array[i], Counter, ValidCounter);
+			printf("[%s][%08lX] %016llX (%d/%d)\n", HookName, ThreadId, 0x140000000 + (Array[i] - Exe), Counter, ValidCounter);
 			Counter++;
 		}
 	}
